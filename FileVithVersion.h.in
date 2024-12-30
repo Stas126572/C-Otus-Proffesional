@@ -1,0 +1,8 @@
+#pragma once
+
+#cmakedefine01 _PROJECT_VERSION_PATÑH @PROJECT_VERSION_PATCH@
+#define STR(str) #str
+#define STRING(str) STR(str)
+
+std::string s = STRING(_PROJECT_VERSION_PATÑH);
+int PROJECT_VERSION_PATÑH = s[0] - '0';
