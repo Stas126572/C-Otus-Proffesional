@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - HW1
-      - feature/github_actions
-
 jobs:
   build:
     runs-on: ubuntu-latest
