@@ -1,6 +1,6 @@
 #pragma once
-#include "build\FileVithVersion.h"
+#include "FileVithVersion.h"
 int version()
 {
-    return PROJECT_VERSION_PATÑH;
+    return PROJECT_VERSION_PATCH;
 }
