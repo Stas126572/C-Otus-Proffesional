@@ -62,7 +62,7 @@ public:
     {
         size = vec.size();
         mas = new  char[vec.size()];
-        for (int i = 0; i < vec.size(); i++)
+        for (auto i = 0; i < vec.size(); i++)
         {
             const char* s = vec[i].c_str();
             mas[i] = (atoi(s)-128);
@@ -94,7 +94,7 @@ public:
 
 std::ostream& operator<<(std::ostream& os, IP ip)
 {
-    for (int i = 0; i < ip.size; i++)
+    for (auto i = 0; i < ip.size; i++)
     {
         if (i != 0)
         {
@@ -107,7 +107,7 @@ std::ostream& operator<<(std::ostream& os, IP ip)
 }
 
 
-int main(int argc, char const* argv[])
+int main()
 {
     try
     {
@@ -134,7 +134,7 @@ int main(int argc, char const* argv[])
             return filter_with_predicate(source,[s]
                                          (IP v)
                                          {
-                                             for (int i = 0; i < s.size(); i++)
+                                             for (auto i = 0; i < s.size(); i++)
                                              {
                                                  if (v[i] != s[i])
                                                  {
@@ -153,7 +153,7 @@ int main(int argc, char const* argv[])
             return filter_with_predicate(source,
                                          [s](IP v)
                                          {
-                                             for (int i = 0; i < v.get_size(); i++)
+                                             for (auto i = 0; i < v.get_size(); i++)
                                              {
                                                  if (v[i] == s)
                                                  {
