@@ -8,12 +8,6 @@ project(ip_filter VERSION ${PROJECT_VERSION})
 
 add_executable(ip_filter_cli Main.cpp)
 
-if (MSVC)
-  target_compile_options(ip_filter_cli PRIVATE  /W4)
-else ()
-  target_compile_options(ip_filter_cli PRIVATE -Wall -Wextra -pedantic -Werror)
-endif()
-
 install(TARGETS ip_filter_cli RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
