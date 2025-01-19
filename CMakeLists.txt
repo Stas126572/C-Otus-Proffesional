@@ -8,11 +8,6 @@ project(ip_filter VERSION ${PROJECT_VERSION})
 
 add_executable(ip_filter_cli main.cpp)
 
-set_target_properties(ip_filter_cli hello_world_library PROPERTIES
-    CXX_STADARD 11
-    CXX_STANDARD_REQUIRED ON)
-    
-
 if (MSVC)
   target_compile_options(ip_filter_cli PRIVATE  /W4)
 else ()
