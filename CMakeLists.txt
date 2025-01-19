@@ -6,7 +6,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(ip_filter VERSION ${PROJECT_VERSION})
 
 
-add_executable(ip_filter_cli main.cpp)
+add_executable(ip_filter_cli Main.cpp)
 
 if (MSVC)
   target_compile_options(ip_filter_cli PRIVATE  /W4)
