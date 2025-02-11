@@ -2,6 +2,8 @@
 #include <vector>
 #include <map>
 
+using size_t = unsigned long long;
+
 template <class T, bool use_size = false, size_t __s = 0 >
 struct PullAllocator
 {
