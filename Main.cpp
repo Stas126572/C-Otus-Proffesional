@@ -160,8 +160,8 @@ namespace MyList
             return it;
         }
 
-        using Node_allocator = Allocator:: template  rebind<Node<T>>:: template other;
-        using Iterator_allocator = Allocator:: template  rebind<Iterator<T, Allocator>>:: template other;
+        using Node_allocator = typename Allocator:: typename  rebind<Node<T>>:: typename other;
+        using Iterator_allocator = typename Allocator:: typename  rebind<Iterator<T, Allocator>>:: typename other;
 
 
         Node_allocator node_al;
