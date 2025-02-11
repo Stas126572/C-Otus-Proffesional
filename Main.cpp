@@ -23,7 +23,7 @@ public:
 
 
 
-    PullAllocator(size_t _s = 512) noexcept : s(use_size ? __s : _s), index(0), numbers_of_vladel(0) {
+    PullAllocator(size_t _s = 512) noexcept : numbers_of_vladel(0), index(0), s(use_size ? __s : _s) {
         try
         {
             pull = static_cast<T*>(std::malloc(s * sizeof(T)));
@@ -34,7 +34,7 @@ public:
         }
     }
     template <class U>
-    PullAllocator(PullAllocator<U>&& a) noexcept : index(a.index), numbers_of_vladel(a.numbers_of_vladel), s(a.s), pull((T*)a.pull)
+    PullAllocator(PullAllocator<U>&& a) noexcept : numbers_of_vladel(a.numbers_of_vladel), index(a.index), s(a.s), pull((T*)a.pull)
     {
         a.numbers_of_vladel++;
     }
