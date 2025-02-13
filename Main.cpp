@@ -43,7 +43,7 @@ public:
 
         T* ptr = &pull[index];
         index += n;
-        if (index > s)
+        if ((size_t)index > s)
         {
             delete ptr;
             throw std::bad_alloc();
