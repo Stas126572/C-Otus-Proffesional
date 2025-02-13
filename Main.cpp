@@ -2,8 +2,6 @@
 #include <vector>
 #include <map>
 
-using size_t = unsigned long long;
-
 template <class T, bool use_size = false, size_t __s = 0 >
 struct PullAllocator
 {
@@ -162,8 +160,8 @@ namespace MyList
             return it;
         }
 
-        using Node_allocator = typename Allocator:: typename  rebind<Node<T>>:: typename other;
-        using Iterator_allocator = typename Allocator:: typename  rebind<Iterator<T, Allocator>>:: typename other;
+        using Node_allocator = typename Allocator:: template rebind< Node<T>>:: other;
+        using Iterator_allocator = typename Allocator:: template  rebind<Iterator<T, Allocator>>:: other;
 
 
         Node_allocator node_al;
