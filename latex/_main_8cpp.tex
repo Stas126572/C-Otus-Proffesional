@@ -1,0 +1,67 @@
+\doxysection{Файл C\+:/\+Users/\+Sergey/\+Documents/\+C++ Proffesional Otus/\+HW 5. Editor/\+Main.cpp}
+\hypertarget{_main_8cpp}{}\label{_main_8cpp}\index{C:/Users/Sergey/Documents/C++ Proffesional Otus/HW 5. Editor/Main.cpp@{C:/Users/Sergey/Documents/C++ Proffesional Otus/HW 5. Editor/Main.cpp}}
+
+
+Struct of graphic editor.  
+
+
+{\ttfamily \#include $<$iostream$>$}\newline
+\doxysubsubsection*{Классы}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_graphic_editor_1_1_documents_1_1_document}{Graphic\+Editor\+::\+Documents\+::\+Document}}
+\item 
+struct \mbox{\hyperlink{struct_graphic_editor_1_1_type_of_files_1_1_basic_c_lass}{Graphic\+Editor\+::\+Type\+Of\+Files\+::\+Basic\+CLass$<$ Document\+Type $>$}}
+\item 
+struct \mbox{\hyperlink{struct_graphic_editor_1_1_writers_1_1_file}{Graphic\+Editor\+::\+Writers\+::\+File$<$ File\+System, Name\+Type $>$}}
+\item 
+class \mbox{\hyperlink{class_graphic_editor_1_1_primitives_1_1_basic_primitive}{Graphic\+Editor\+::\+Primitives\+::\+Basic\+Primitive}}
+\item 
+class \mbox{\hyperlink{class_graphic_editor_1_1_g_u_i_1_1_basic_c_lass}{Graphic\+Editor\+::\+GUI\+::\+Basic\+CLass$<$ Document\+Type $>$}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Пространства имен}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespace_graphic_editor_1_1_documents}{Graphic\+Editor\+::\+Documents}}
+\begin{DoxyCompactList}\small\item\em Use it to appended primitive. \end{DoxyCompactList}\item 
+namespace \mbox{\hyperlink{namespace_graphic_editor_1_1_type_of_files}{Graphic\+Editor\+::\+Type\+Of\+Files}}
+\begin{DoxyCompactList}\small\item\em Use it to decode document to bin. \end{DoxyCompactList}\item 
+namespace \mbox{\hyperlink{namespace_graphic_editor_1_1_writers}{Graphic\+Editor\+::\+Writers}}
+\begin{DoxyCompactList}\small\item\em Use it to write bin document to file. \end{DoxyCompactList}\item 
+namespace \mbox{\hyperlink{namespace_graphic_editor_1_1_primitives}{Graphic\+Editor\+::\+Primitives}}
+\begin{DoxyCompactList}\small\item\em This namespace have got some types of primitive and you can appended your primitive. \end{DoxyCompactList}\item 
+namespace \mbox{\hyperlink{namespace_graphic_editor_1_1_g_u_i}{Graphic\+Editor\+::\+GUI}}
+\begin{DoxyCompactList}\small\item\em Use it to appended graphic primitive. \end{DoxyCompactList}\item 
+namespace \mbox{\hyperlink{namespace_graphic_editor_1_1functions}{Graphic\+Editor\+::functions}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Функции}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{namespace_graphic_editor_1_1functions_ae0c64e1d8726753a62450bb63a5568c6}\label{namespace_graphic_editor_1_1functions_ae0c64e1d8726753a62450bb63a5568c6} 
+{\footnotesize template$<$typename Type\+Document$>$ }\\std\+::shared\+\_\+ptr$<$ Type\+Document $>$ {\bfseries Graphic\+Editor\+::functions\+::create\+\_\+new\+\_\+document} ()
+\item 
+\Hypertarget{namespace_graphic_editor_1_1functions_af0219baac4468c19a9923f087b85e794}\label{namespace_graphic_editor_1_1functions_af0219baac4468c19a9923f087b85e794} 
+{\footnotesize template$<$typename File, typename Document$>$ }\\void {\bfseries Graphic\+Editor\+::functions\+::import\+\_\+document} (Document dc, File fl)
+\item 
+\Hypertarget{namespace_graphic_editor_1_1functions_a4bdf36a25bfe47c7f3e49ad98e9e946a}\label{namespace_graphic_editor_1_1functions_a4bdf36a25bfe47c7f3e49ad98e9e946a} 
+{\footnotesize template$<$typename File, typename Document$>$ }\\std\+::shared\+\_\+ptr$<$ File $>$ {\bfseries Graphic\+Editor\+::functions\+::export\+\_\+document} (File fl)
+\item 
+\Hypertarget{namespace_graphic_editor_1_1functions_a1e001d6faa9eea76d5edc47987b0d837}\label{namespace_graphic_editor_1_1functions_a1e001d6faa9eea76d5edc47987b0d837} 
+{\footnotesize template$<$typename T, typename ... Args$>$ }\\std\+::shared\+\_\+ptr$<$ T $>$ {\bfseries Graphic\+Editor\+::functions\+::create\+\_\+graphic\+\_\+primitive} (Args... value)
+\item 
+\Hypertarget{_main_8cpp_ae66f6b31b5ad750f1fe042a706a4e3d4}\label{_main_8cpp_ae66f6b31b5ad750f1fe042a706a4e3d4} 
+int {\bfseries main} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Подробное описание}
+Struct of graphic editor. 
+
+\begin{DoxyAuthor}{Авторы}
+Stanislav Manichev 
+\end{DoxyAuthor}
+\begin{DoxyRefDesc}{Необходимо сделать}
+\item[\mbox{\hyperlink{todo__todo000001}{Необходимо сделать}}]Put some code in methods \end{DoxyRefDesc}
+\begin{DoxyVersion}{Версия}
+0.\+1 
+\end{DoxyVersion}
