@@ -6,12 +6,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(ip_filter VERSION ${PROJECT_VERSION})
 
 
-add_executable(ip_filter_cli Main.cpp)
+add_executable(Parser_cli Main.cpp)
 
-install(TARGETS ip_filter_cli RUNTIME DESTINATION bin)
+install(TARGETS Parser_cli RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
-set(CPACK_PACKAGE_NAME ip_filter)
+set(CPACK_PACKAGE_NAME Parser_filter)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
