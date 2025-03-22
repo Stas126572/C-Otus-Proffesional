@@ -1,256 +1,315 @@
-#include <cassert>
-#include <cstdlib>
+// ConsoleApplication179.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+//
+
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include <deque>
 
-// ("",  '.') -> [""]
-// ("11", '.') -> ["11"]
-// ("..", '.') -> ["", "", ""]
-// ("11.", '.') -> ["11", ""]
-// (".11", '.') -> ["", "11"]
-// ("11.22", '.') -> ["11", "22"]
 
-using st = std::string;
-auto split(const st& str, char d)
+namespace Commands
 {
-    std::vector<st> r;
-
-    st::size_type start = 0;
-    st::size_type stop = str.find_first_of(d);
-    while (stop != st::npos)
+    class Command
     {
-        r.push_back(str.substr(start, stop - start));
+    public:
+        virtual void run() {};
 
-        start = stop + 1;
-        stop = str.find_first_of(d, start);
-    }
+        Command() {};
+    };
 
-    r.push_back(str.substr(start));
+    class Nop : Command
+    {
+    public:
+        void run() override {};
+        Nop() {};
+    };
 
-    return r;
+    class Log : Command
+    {
+    public:
+        void run() override { std::cout << "I'm logger."; };
+        Log() {};
+    };
+
+    class Summuter : Command
+    {
+    public:
+        void run() override { std::cout << "Sum 2 + 2 = 4."; };
+        Summuter() {};
+    };
 }
 
-template<typename T, typename T2>
-std::vector<T2>  filter_with_predicate(std::vector<T2> source, T func)
+namespace DynamicBlock
 {
-    std::vector<T2> vector;
-
-    for (auto ip : source)
+    class MainDynamicBlock
     {
-        if (func(ip) == true)
+    public:
+        virtual void append(MainDynamicBlock*) {};
+        virtual void append(Commands::Command*) {};
+        virtual void run() {};
+    };
+
+    class DynamicBlockCommand : MainDynamicBlock
+    {
+        Commands::Command* command;
+    public:
+        DynamicBlockCommand()
         {
-            vector.push_back(ip);
+            command = (Commands::Command*)(new Commands::Nop());
+        };
+
+        DynamicBlockCommand(Commands::Command* cm)
+        {
+            command = cm;
+        };
+
+        void run()
+        {
+            command->run();
         }
-    }
+    };
 
-    return vector;
-}
-
-class IP
-{
-    char* mas;
-    int size;
-
-public:
-
-
-    friend std::ostream& operator<<(std::ostream& os, IP ip);
-
-    IP(std::vector<std::string> vec)
+    class DynamicBlockEditor : MainDynamicBlock
     {
-        size = vec.size();
-        mas = new  char[vec.size()];
-        for (auto i = 0; i < vec.size(); i++)
+        std::deque<MainDynamicBlock*> commands;
+        DynamicBlockEditor() {};
+
+        void append(MainDynamicBlock* cm)
         {
-            const char* s = vec[i].c_str();
-            mas[i] = (atoi(s)-128);
+            commands.push_back(cm);
         }
-    }
 
-    int operator[] (unsigned int s)
-    {
-        return ((int)mas[s]+128);
-    }
-
-    bool operator <(IP& second_ip)
-    {
-        for (int i = 0; i < size; i++)
+        void append(Commands::Command* cm)
         {
-            if (second_ip.mas[i] != mas[i])
+            commands.push_back((MainDynamicBlock*)(new DynamicBlockCommand(cm)));
+        }
+
+        void run()
+        {
+            for (auto i : commands)
             {
-                return mas[i] < second_ip.mas[i];
+                i->run();
+
             }
         }
-        return false;
+    };
+
+
+}
+
+namespace StaticBlock
+{
+    class StaticBlock
+    {
+        int N;
+        std::vector<Commands::Command*> commands;
+    public:
+        StaticBlock(int N) : N(N) { commands.reserve(N); };
+
+        void append(Commands::Command* cm)
+        {
+            commands.push_back(cm);
+        }
+
+        void run()
+        {
+            for (auto i : commands)
+            {
+                i->run();
+            }
+        }
+    };
+}
+
+namespace Adapters
+{
+
+    class BlockAdapter
+    {
+    public:
+        int N;
+        bool is_it_command = false;
+        virtual void append(BlockAdapter* ba) {};
+        virtual void run() {};
+    };
+
+    class CommandBlockAdapter : public BlockAdapter
+    {
+        Commands::Command* cm;
+    public:
+        CommandBlockAdapter()
+        {
+            is_it_command = true;
+            cm = new Commands::Command();
+        };
+
+        CommandBlockAdapter(Commands::Command* _cm)
+        {
+            is_it_command = true;
+            cm = _cm;
+        };
+
+        Commands::Command* get()
+        {
+            return cm;
+        }
+
+        void run()
+        {
+            cm->run();
+        }
+    };
+
+    class DynamicBlockAdapter : public BlockAdapter
+    {
+        DynamicBlock::MainDynamicBlock* db;
+    public:
+
+        DynamicBlockAdapter(int N)
+        {
+
+        }
+
+        DynamicBlock::MainDynamicBlock* get()
+        {
+            return db;
+        }
+
+        void append(BlockAdapter* cm) override
+        {
+            if (cm->is_it_command == true)
+            {
+                db->append(((CommandBlockAdapter*)(cm))->get());
+            }
+            db->append(((DynamicBlockAdapter*)(cm))->get());
+        }
+
+        void run()
+        {
+            db->run();
+        }
+    };
+
+    class StaticBlockAdapter : public BlockAdapter
+    {
+        StaticBlock::StaticBlock sb;
+    public:
+        StaticBlockAdapter(int N) : sb(N)
+        {
+
+        }
+
+
+        StaticBlock::StaticBlock get()
+        {
+            return sb;
+        }
+
+        void append(BlockAdapter* cm) override
+        {
+            sb.append(((CommandBlockAdapter*)(cm))->get());
+        }
+
+        void run()
+        {
+            sb.run();
+        }
+    };
+
+}
+
+class ParserBlock
+{
+    ParserBlock* ParserBlock_high_up;
+    Adapters::BlockAdapter* command;
+    int N;
+    int zanyato;
+
+public:
+    ParserBlock(int N) : N(N)
+    {
+
     }
 
-    int get_size()
+    void parse_string_to_command_and_save_it(std::string& s)
     {
-        return size;
+        if (s[0] == '[')
+        {
+            ParserBlock pb{ N };
+            pb.ParserBlock_high_up = this;
+            command = pb.command;
+            ParserBlock_high_up = pb.ParserBlock_high_up;
+            return;
+        }
+        else if (s[0] == ']')
+        {
+            command->run();
+            return;
+        }
+        else
+        {
+            if (zanyato == N)
+            {
+                command->run();
+                zanyato = 0;
+            }
+        }
+
+        if (s == "Log")
+        {
+            Commands::Log lg{};
+            Commands::Command* cm = (Commands::Command*)(&lg);
+            Adapters::CommandBlockAdapter ca{cm};
+        }
+
+        if (s == "Summer")
+        {
+            Commands::Summuter sm;
+            Commands::Command* cm = (Commands::Command*)(&sm);
+            Adapters::CommandBlockAdapter ca{ cm };
+        }
+        //Parse command
+    }
+
+    Adapters::BlockAdapter* get()
+    {
+        return command;
+    }
+
+    ParserBlock* get_parent()
+    {
+        return ParserBlock_high_up;
     }
 };
 
-std::ostream& operator<<(std::ostream& os, IP ip)
+int main(int argc, char** argv)
 {
-    for (auto i = 0; i < ip.size; i++)
+    int N = std::atoi((const char*)argv[1]);
+
+    ParserBlock pr(N);
+
+    std::string s;
+
+
+    while (!std::cin.bad())
     {
-        if (i != 0)
-        {
-            os << '.';
-        }
-        os << std::to_string(((int)ip[i]));
+        std::cin >> s;
+        pr.parse_string_to_command_and_save_it(s);
+        auto block = pr.get();
+        auto parent_block = pr.get_parent()->get();
+        parent_block->append(block);
     }
 
-    return os;
+    std::cout << "Hello W1orld!\n";
 }
 
+// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
+// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
 
-int main()
-{
-    try
-    {
-        std::vector<IP > ip_pool;
-
-        for (st line; std::getline(std::cin, line);)
-        {
-            auto v = split(line, '\t');
-            ip_pool.push_back(split(v.at(0), '.'));
-        }
-
-        // TODO reverse lexicographically sort
-
-        std::sort(ip_pool.begin(), ip_pool.end());
-
-        for (auto ip : ip_pool)
-        {
-            std::cout << ip << std::endl;
-        }
-
-
-        auto filter = [](auto source, std::string& s )
-        {
-            return filter_with_predicate(source,[s]
-                                         (IP v)
-                                         {
-                                             for (auto i = 0; i < s.size(); i++)
-                                             {
-                                                 if (v[i] != s[i])
-                                                 {
-                                                     return false;
-                                                 }
-                                             }
-                                             return true;
-
-                                         }
-                                         );
-        };
-
-
-        auto filter_any = [](auto source, char s)
-        {
-            return filter_with_predicate(source,
-                                         [s](IP v)
-                                         {
-                                             for (auto i = 0; i < v.get_size(); i++)
-                                             {
-                                                 if (v[i] == s)
-                                                 {
-                                                     return true;
-                                                 }
-                                             }
-                                             return false;
-                                         }
-                                         );
-        };
-
-        std::string str = { 1 };
-
-        for (auto ip : filter(ip_pool, str))
-        {
-            std::cout << ip << std::endl;
-        }
-
-
-        std::string str2 = {46, 70};
-
-        for (auto ip : filter(ip_pool, str2))
-        {
-            std::cout << ip << std::endl;
-        }
-
-        for (auto ip : filter_any(ip_pool, 46))
-        {
-            std::cout << ip << std::endl;
-        }
-        // 222.173.235.246
-        // 222.130.177.64
-        // 222.82.198.61
-        // ...
-        // 1.70.44.170
-        // 1.29.168.152
-        // 1.1.234.8
-
-        // TODO filter by first byte and output
-        // ip = filter(1)
-
-        // 1.231.69.33
-        // 1.87.203.225
-        // 1.70.44.170
-        // 1.29.168.152
-        // 1.1.234.8
-
-        // TODO filter by first and second bytes and output
-        // ip = filter(46, 70)
-
-        // 46.70.225.39
-        // 46.70.147.26
-        // 46.70.113.73
-        // 46.70.29.76
-
-        // TODO filter by any byte and output
-        // ip = filter_any(46)
-
-        // 186.204.34.46
-        // 186.46.222.194
-        // 185.46.87.231
-        // 185.46.86.132
-        // 185.46.86.131
-        // 185.46.86.131
-        // 185.46.86.22
-        // 185.46.85.204
-        // 185.46.85.78
-        // 68.46.218.208
-        // 46.251.197.23
-        // 46.223.254.56
-        // 46.223.254.56
-        // 46.182.19.219
-        // 46.161.63.66
-        // 46.161.61.51
-        // 46.161.60.92
-        // 46.161.60.35
-        // 46.161.58.202
-        // 46.161.56.241
-        // 46.161.56.203
-        // 46.161.56.174
-        // 46.161.56.106
-        // 46.161.56.106
-        // 46.101.163.119
-        // 46.101.127.145
-        // 46.70.225.39
-        // 46.70.147.26
-        // 46.70.113.73
-        // 46.70.29.76
-        // 46.55.46.98
-        // 46.49.43.85
-        // 39.46.86.85
-        // 5.189.203.46
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << std::endl;
-    }
-
-    return 0;
-}
+// Советы по началу работы 
+//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
+//   2. В окне Team Explorer можно подключиться к системе управления версиями.
+//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
+//   4. В окне "Список ошибок" можно просматривать ошибки.
+//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
+//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
