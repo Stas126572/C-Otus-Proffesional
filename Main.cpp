@@ -2,6 +2,7 @@
 //
 
 #include <iostream>
+#include <list>
 
 /*!
 \file
@@ -18,15 +19,35 @@ namespace GraphicEditor
     \brief Use it to appended primitive
     \todo Append some logics
     */
+    namespace Primitives
+    {
+        class BasicPrimitive
+        {
+        public:
+            BasicPrimitive() {}
+
+            void draw() {};
+        };
+    }
+    
+
     namespace Documents
     {
         struct Document
         {
             Document() {};
-
+            
+            std::list< Primitives::BasicPrimitive*> ls_of_pr;
             //!Appended primitive
-            template<typename primitive>
-            void add_data(primitive data) {};
+            void add_data(Primitives::BasicPrimitive* data) { ls_of_pr.push_back(data); };
+
+            void draw_it() {
+
+                for (auto i : ls_of_pr)
+                {
+                    i->draw();
+                }
+            }
         };
     }
 
@@ -35,13 +56,55 @@ namespace GraphicEditor
     \warning This class can't write information to file
     \todo Append some types of files
     */
+
+    namespace Writers
+    {
+        template<typename FileSystem, FileSystem obj, typename BytesType, typename NameType>
+        struct File
+        {
+            NameType nm;
+
+            File(NameType nt)
+            {
+                nm = nt;
+            }
+
+            //! Put class of namespace TypeOfFiles to me
+            template<typename DocumentType>
+            void ImportToMe(std::shared_ptr<DocumentType> sh)
+            {
+                obj << sh->bt;
+            }
+
+            //! Get class of namespace TypeOfFiles from me
+            template<typename DocumentType>
+            std::shared_ptr<DocumentType> ExportFromMe() 
+            {
+                BytesType a;
+                obj >> a;
+                std::shared_ptr<DocumentType> sh;
+                sh->bt = a;
+                return sh;
+            }
+        };
+    }
+
     namespace TypeOfFiles
     {
-        template<typename DocumentType>
+        template<typename DocumentType, typename BytesType>
         struct BasicCLass
         {
-            std::shared_ptr<DocumentType> sh_ptr; ///< Using it to get inforamtion about file
-            virtual void decode() {}; ///< This function get information from document and put this information to file
+        private:
+           
+        public:
+            std::shared_ptr<Documents::Document> sh_ptr; ///< Using it to get inforamtion about file
+            BytesType bt;
+
+            virtual void decode() //It decode sh_ptr to bytes
+            {
+                
+            
+            }; ///< This function get information from document and put this information to file
         };
     }
 
@@ -51,35 +114,13 @@ namespace GraphicEditor
     \warning It don't work with GUI document
     \todo Appended some logics
     */
-    namespace Writers
-    {
-        template<typename FileSystem, typename NameType>
-        struct File
-        {
-            File(NameType nt) {}
 
-            //! Put class of namespace TypeOfFiles to me
-            template<typename DocumentType>
-            void ImportToMe(std::shared_ptr<DocumentType> sh) {}
-
-            //! Get class of namespace TypeOfFiles from me
-            template<typename DocumentType>
-            std::shared_ptr<DocumentType> ExportFromMe() {}
-        };
-    }
 
     /*!
     \brief This namespace have got some types of primitive and you can appended your primitive
     \todo Appended some primitives
     */
-    namespace Primitives
-    {
-        class BasicPrimitive
-        {
-        public:
-            BasicPrimitive() {}
-        };
-    }
+
 
 
 
@@ -104,17 +145,30 @@ namespace GraphicEditor
             BasicCLass(std::shared_ptr<DocumentType> dc) { put_document(dc); };
 
             //! Use it to get class from me(at namespace Documents) to get it to Writers
-            std::shared_ptr<DocumentType> take_document() {};
+            std::shared_ptr<DocumentType> take_document() 
+            {
+                return sh_ptr;
+            };
 
             //! Use it to put class from namespace Documents(What you include from Writers) to GUI
-            void put_document(std::shared_ptr<DocumentType> dc) {};
+            void put_document(std::shared_ptr<DocumentType> dc) 
+            {
+                sh_ptr = dc;
+            };
 
-            template<typename TypePrimitive>
-            void draw_primitive(std::shared_ptr<TypePrimitive> sh) {};
+            void add_primitive(Primitives::BasicPrimitive* sh)
+            {
+                sh_ptr->add_data(sh);
+            };
+
+            void draw()
+            {
+                sh_ptr->draw_it();
+            }
         };
 
     }
-    
+
 
     //! Examples
     //! \warning Not use it
@@ -123,6 +177,7 @@ namespace GraphicEditor
 
 int main()
 {
+
 }
 
 // Çàïóñê ïðîãðàììû: CTRL+F5 èëè ìåíþ "Îòëàäêà" > "Çàïóñê áåç îòëàäêè"
