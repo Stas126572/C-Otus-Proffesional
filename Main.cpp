@@ -86,7 +86,7 @@ namespace GraphicEditor
 
             File(FileSystem& fs, BytesType bt) : fs(fs), bt(bt)
             {
-                std::cout << "I write to std::fstream " << bt;
+                std::cout << "I write to std::fstream";
             }
 
             //! Put class of namespace TypeOfFiles to me
@@ -213,8 +213,6 @@ int main()
 
     std::fstream fs("");
     Writers::File<std::fstream, char*> file_wr(fs, tf.bt);
-    
-
 }
 
 // Çàïóñê ïðîãðàììû: CTRL+F5 èëè ìåíþ "Îòëàäêà" > "Çàïóñê áåç îòëàäêè"
