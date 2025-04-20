@@ -1,315 +1,125 @@
-// ConsoleApplication179.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-
 #include <iostream>
 #include <string>
 #include <vector>
 #include <deque>
+#include <memory>
 
-
-namespace Commands
-{
-    class Command
-    {
+namespace Commands {
+    class Command {
     public:
-        virtual void run() {};
-
-        Command() {};
+        virtual void run() = 0;
+        virtual ~Command() = default;
     };
 
-    class Nop : Command
-    {
+    class Log : public Command {
     public:
-        void run() override {};
-        Nop() {};
+        void run() override { std::cout << "I'm logger.\n"; }
     };
 
-    class Log : Command
-    {
+    class Summuter : public Command {
     public:
-        void run() override { std::cout << "I'm logger."; };
-        Log() {};
-    };
-
-    class Summuter : Command
-    {
-    public:
-        void run() override { std::cout << "Sum 2 + 2 = 4."; };
-        Summuter() {};
+        void run() override { std::cout << "Sum 2 + 2 = 4.\n"; }
     };
 }
 
-namespace DynamicBlock
-{
-    class MainDynamicBlock
-    {
-    public:
-        virtual void append(MainDynamicBlock*) {};
-        virtual void append(Commands::Command*) {};
-        virtual void run() {};
-    };
-
-    class DynamicBlockCommand : MainDynamicBlock
-    {
-        Commands::Command* command;
-    public:
-        DynamicBlockCommand()
-        {
-            command = (Commands::Command*)(new Commands::Nop());
-        };
-
-        DynamicBlockCommand(Commands::Command* cm)
-        {
-            command = cm;
-        };
-
-        void run()
-        {
-            command->run();
-        }
-    };
-
-    class DynamicBlockEditor : MainDynamicBlock
-    {
-        std::deque<MainDynamicBlock*> commands;
-        DynamicBlockEditor() {};
-
-        void append(MainDynamicBlock* cm)
-        {
-            commands.push_back(cm);
-        }
-
-        void append(Commands::Command* cm)
-        {
-            commands.push_back((MainDynamicBlock*)(new DynamicBlockCommand(cm)));
-        }
-
-        void run()
-        {
-            for (auto i : commands)
-            {
-                i->run();
-
-            }
-        }
-    };
-
-
-}
-
-namespace StaticBlock
-{
-    class StaticBlock
-    {
-        int N;
-        std::vector<Commands::Command*> commands;
-    public:
-        StaticBlock(int N) : N(N) { commands.reserve(N); };
-
-        void append(Commands::Command* cm)
-        {
-            commands.push_back(cm);
-        }
-
-        void run()
-        {
-            for (auto i : commands)
-            {
-                i->run();
-            }
-        }
-    };
-}
-
-namespace Adapters
-{
-
-    class BlockAdapter
-    {
-    public:
-        int N;
-        bool is_it_command = false;
-        virtual void append(BlockAdapter* ba) {};
-        virtual void run() {};
-    };
-
-    class CommandBlockAdapter : public BlockAdapter
-    {
-        Commands::Command* cm;
-    public:
-        CommandBlockAdapter()
-        {
-            is_it_command = true;
-            cm = new Commands::Command();
-        };
-
-        CommandBlockAdapter(Commands::Command* _cm)
-        {
-            is_it_command = true;
-            cm = _cm;
-        };
-
-        Commands::Command* get()
-        {
-            return cm;
-        }
-
-        void run()
-        {
-            cm->run();
-        }
-    };
-
-    class DynamicBlockAdapter : public BlockAdapter
-    {
-        DynamicBlock::MainDynamicBlock* db;
-    public:
-
-        DynamicBlockAdapter(int N)
-        {
-
-        }
-
-        DynamicBlock::MainDynamicBlock* get()
-        {
-            return db;
-        }
-
-        void append(BlockAdapter* cm) override
-        {
-            if (cm->is_it_command == true)
-            {
-                db->append(((CommandBlockAdapter*)(cm))->get());
-            }
-            db->append(((DynamicBlockAdapter*)(cm))->get());
-        }
-
-        void run()
-        {
-            db->run();
-        }
-    };
-
-    class StaticBlockAdapter : public BlockAdapter
-    {
-        StaticBlock::StaticBlock sb;
-    public:
-        StaticBlockAdapter(int N) : sb(N)
-        {
-
-        }
-
-
-        StaticBlock::StaticBlock get()
-        {
-            return sb;
-        }
-
-        void append(BlockAdapter* cm) override
-        {
-            sb.append(((CommandBlockAdapter*)(cm))->get());
-        }
-
-        void run()
-        {
-            sb.run();
-        }
-    };
-
-}
-
-class ParserBlock
-{
-    ParserBlock* ParserBlock_high_up;
-    Adapters::BlockAdapter* command;
-    int N;
-    int zanyato;
-
+class Block {
+protected:
+    std::vector<std::unique_ptr<Commands::Command>> commands;
 public:
-    ParserBlock(int N) : N(N)
-    {
-
+    virtual void add_command(std::unique_ptr<Commands::Command> cmd) {
+        commands.push_back(std::move(cmd));
     }
-
-    void parse_string_to_command_and_save_it(std::string& s)
-    {
-        if (s[0] == '[')
-        {
-            ParserBlock pb{ N };
-            pb.ParserBlock_high_up = this;
-            command = pb.command;
-            ParserBlock_high_up = pb.ParserBlock_high_up;
-            return;
+    virtual void execute() {
+        for (auto& cmd : commands) {
+            if (cmd) cmd->run();
         }
-        else if (s[0] == ']')
-        {
-            command->run();
-            return;
-        }
-        else
-        {
-            if (zanyato == N)
-            {
-                command->run();
-                zanyato = 0;
-            }
-        }
-
-        if (s == "Log")
-        {
-            Commands::Log lg{};
-            Commands::Command* cm = (Commands::Command*)(&lg);
-            Adapters::CommandBlockAdapter ca{cm};
-        }
-
-        if (s == "Summer")
-        {
-            Commands::Summuter sm;
-            Commands::Command* cm = (Commands::Command*)(&sm);
-            Adapters::CommandBlockAdapter ca{ cm };
-        }
-        //Parse command
+        commands.clear();
     }
+    virtual ~Block() = default;
+};
 
-    Adapters::BlockAdapter* get()
-    {
-        return command;
-    }
+class StaticBlock : public Block {
+    int capacity;
+    int count = 0;
+public:
+    StaticBlock(int N) : capacity(N) {}
 
-    ParserBlock* get_parent()
-    {
-        return ParserBlock_high_up;
+    void add_command(std::unique_ptr<Commands::Command> cmd) override {
+        Block::add_command(std::move(cmd));
+        if (++count >= capacity) {
+            execute();
+            count = 0;
+        }
     }
 };
 
-int main(int argc, char** argv)
-{
-    int N = std::atoi((const char*)argv[1]);
+class DynamicBlock : public Block {
+public:
+    DynamicBlock* parent;
+    void execute() override {
+        Block::execute();
+    }
+};
 
-    ParserBlock pr(N);
+class Parser {
+    std::unique_ptr<StaticBlock> static_block;
+    DynamicBlock* dynamic_blocks;
+    int block_size;
 
-    std::string s;
-
-
-    while (!std::cin.bad())
-    {
-        std::cin >> s;
-        pr.parse_string_to_command_and_save_it(s);
-        auto block = pr.get();
-        auto parent_block = pr.get_parent()->get();
-        parent_block->append(block);
+public:
+    Parser(int N) : block_size(N) {
+        static_block = std::make_unique<StaticBlock>(N);
     }
 
-    std::cout << "Hello W1orld!\n";
+    void parse(const std::string& input) {
+        if (input == "[") {
+            // Начало динамического блока
+            DynamicBlock* db = new DynamicBlock();
+            db->parent = dynamic_blocks;
+            dynamic_blocks = db;
+        }
+        else if (input == "]") {
+            // Конец динамического блока
+            if (dynamic_blocks != nullptr)
+            {
+                DynamicBlock* parent = dynamic_blocks->parent;
+                dynamic_blocks->execute();
+                delete dynamic_blocks;
+                dynamic_blocks = parent;
+            }
+        }
+        else {
+            std::unique_ptr<Commands::Command> cmd;
+            if (input == "Log") {
+                cmd = std::make_unique<Commands::Log>();
+            }
+            else if (input == "Summer") {
+                cmd = std::make_unique<Commands::Summuter>();
+            }
+
+            if (cmd) {
+                if (dynamic_blocks != nullptr) {
+                    // Добавляем в текущий динамический блок
+                    dynamic_blocks->add_command(std::move(cmd));
+                }
+                else {
+                    // Добавляем в статический блок
+                    static_block->add_command(std::move(cmd));
+                }
+            }
+        }
+    }
+};
+
+int main(int argc, char** argv) {
+
+    int N = 5;
+    Parser parser(N);
+    std::string input;
+
+    while (std::cin >> input) {
+        parser.parse(input);
+    }
+
+    return 0;
 }
-
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
