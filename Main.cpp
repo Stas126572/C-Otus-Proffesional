@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <list>
+#include <fstream>
 
 /*!
 \file
@@ -26,17 +27,35 @@ namespace GraphicEditor
         public:
             BasicPrimitive() {}
 
-            void draw() {};
+            virtual void draw() {};
+        };
+
+        class Triangle : public BasicPrimitive
+        {
+        public:
+            void draw() override
+            {
+                std::cout << "Triangle draw" << std::endl;
+            };
+        };
+
+        class Rectangle : public BasicPrimitive
+        {
+        public:
+            void draw() override
+            {
+                std::cout << "Rectangle draw" << std::endl;
+            };
         };
     }
-    
+
 
     namespace Documents
     {
         struct Document
         {
             Document() {};
-            
+
             std::list< Primitives::BasicPrimitive*> ls_of_pr;
             //!Appended primitive
             void add_data(Primitives::BasicPrimitive* data) { ls_of_pr.push_back(data); };
@@ -59,29 +78,30 @@ namespace GraphicEditor
 
     namespace Writers
     {
-        template<typename FileSystem, FileSystem obj, typename BytesType, typename NameType>
+        template<typename FileSystem, typename BytesType>
         struct File
         {
-            NameType nm;
+            BytesType bt;
+            FileSystem& fs;
 
-            File(NameType nt)
+            File(FileSystem& fs, BytesType bt) : fs(fs), bt(bt)
             {
-                nm = nt;
+                std::cout << "I write to std::fstream " << bt;
             }
 
             //! Put class of namespace TypeOfFiles to me
             template<typename DocumentType>
             void ImportToMe(std::shared_ptr<DocumentType> sh)
             {
-                obj << sh->bt;
+                fs << sh.bt;
             }
 
             //! Get class of namespace TypeOfFiles from me
             template<typename DocumentType>
-            std::shared_ptr<DocumentType> ExportFromMe() 
+            std::shared_ptr<DocumentType> ExportFromMe()
             {
                 BytesType a;
-                obj >> a;
+                fs >> a;
                 std::shared_ptr<DocumentType> sh;
                 sh->bt = a;
                 return sh;
@@ -94,16 +114,15 @@ namespace GraphicEditor
         template<typename DocumentType, typename BytesType>
         struct BasicCLass
         {
-        private:
-           
         public:
-            std::shared_ptr<Documents::Document> sh_ptr; ///< Using it to get inforamtion about file
+            std::shared_ptr<DocumentType> sh_ptr; ///< Using it to get inforamtion about file
             BytesType bt;
 
-            virtual void decode() //It decode sh_ptr to bytes
+            virtual void decode(std::shared_ptr<DocumentType> shr_ptr) //It decode sh_ptr to bytes
             {
+                sh_ptr = shr_ptr;
+                std::cout << "Decode document" << std::endl;
                 
-            
             }; ///< This function get information from document and put this information to file
         };
     }
@@ -145,13 +164,13 @@ namespace GraphicEditor
             BasicCLass(std::shared_ptr<DocumentType> dc) { put_document(dc); };
 
             //! Use it to get class from me(at namespace Documents) to get it to Writers
-            std::shared_ptr<DocumentType> take_document() 
+            std::shared_ptr<DocumentType> take_document()
             {
                 return sh_ptr;
             };
 
             //! Use it to put class from namespace Documents(What you include from Writers) to GUI
-            void put_document(std::shared_ptr<DocumentType> dc) 
+            void put_document(std::shared_ptr<DocumentType> dc)
             {
                 sh_ptr = dc;
             };
@@ -175,8 +194,26 @@ namespace GraphicEditor
 
 }
 
+using namespace GraphicEditor;
+
 int main()
 {
+    Primitives::Triangle tr;
+    Primitives::BasicPrimitive* bp = static_cast<Primitives::BasicPrimitive*>(&tr);
+    Documents::Document dc;
+    
+
+    GUI::BasicCLass<Documents::Document> bs;
+    bs.put_document(std::make_shared<Documents::Document>(dc));
+    bs.add_primitive(bp);
+    bs.draw();
+    auto document_ = bs.take_document();
+    TypeOfFiles::BasicCLass<Documents::Document, char*> tf;
+    tf.decode(document_);
+
+    std::fstream fs("");
+    Writers::File<std::fstream, char*> file_wr(fs, tf.bt);
+    
 
 }
 
