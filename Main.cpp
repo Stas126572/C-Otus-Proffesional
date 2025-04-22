@@ -113,8 +113,8 @@ public:
 
 int main(int argc, char** argv) {
 
-    int N = 5;
-    Parser parser(N);
+    int N = atoi(argv[0]);
+    Parser parser{N};
     std::string input;
 
     while (std::cin >> input) {
