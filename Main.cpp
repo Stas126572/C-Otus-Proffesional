@@ -113,7 +113,7 @@ public:
 
 int main(int argc, char** argv) {
 
-    int N = atoi(argv[0]);
+    int N = atoi(argv[1]);
     Parser parser{N};
     std::string input;
 
