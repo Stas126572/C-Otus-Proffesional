@@ -18,22 +18,32 @@ namespace Commands {
 
     class Log : public Command {
     public:
-        void run() override { ss << "I'm logger.\n"; }
+        void run() override { ss << "Log"; }
     };
 
-    class Summuter : public Command {
+    class Sum : public Command {
     public:
-        void run() override { ss << "Sum 2 + 2 = 4.\n"; }
+        void run() override { ss << "Sum"; }
     };
 }
 
 class ConsoleExecute
 {
+    bool IsMeWrite = false;
 public:
-    void update() {};
+    void update() { IsMeWrite = false; };
     void operator() (std::stringstream& ss)
     {
-        std::cout << ss.str();
+        if (!IsMeWrite)
+        {
+            std::cout << "bulk:";
+            IsMeWrite = true;
+        }
+        else
+        {
+            std::cout << ",";
+        }
+        std::cout << " " << ss.str();
     }
 };
 
@@ -42,23 +52,35 @@ class FileExecute
     size_t time;
     std::ofstream ofs;
     std::string name;
+    bool IsItWrite;
 public:
     void update()
     {
         if (ofs.is_open())
-        { 
+        {
             ofs.close();
         }
 
         time = std::time(NULL);
-        name = "block";
+        name = "bulk";
         name += std::to_string(time);
         name += ".log";
+        IsItWrite = false;
     }
     void operator() (std::stringstream& ss)
     {
+
         ofs.open(name, std::ios::app);
-        ofs << ss.str();
+        if (!IsItWrite)
+        {
+            ofs << "bulk:";
+        }
+        else
+        {
+            ofs << ",";
+        }
+        
+        ofs << " " << ss.str();
         ofs.close();
     }
 
@@ -185,8 +207,8 @@ public:
             if (input == "Log") {
                 cmd = std::make_unique<Commands::Log>();
             }
-            else if (input == "Summer") {
-                cmd = std::make_unique<Commands::Summuter>();
+            else if (input == "Sum") {
+                cmd = std::make_unique<Commands::Sum>();
             }
 
             if (cmd) {
@@ -217,8 +239,8 @@ public:
 
 int main(int argc, char** argv) {
 
-    
-    if (argc < 2)
+
+   if (argc < 2)
     {
         std::cout << "Use: " << argv[0] << "with parameter N";
         return 1;
