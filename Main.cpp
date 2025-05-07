@@ -182,7 +182,8 @@ class Parser {
 
 public:
     Parser(int N) : block_size(N) {
-        static_block = std::make_unique<StaticBlock<T>>(N);
+         dynamic_blocks = nullptr;
+	 static_block = std::make_unique<StaticBlock<T>>(N);
     }
 
     void parse(const std::string& input) {
