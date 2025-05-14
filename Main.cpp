@@ -16,14 +16,17 @@ namespace Commands {
         virtual ~Command() = default;
     };
 
-    class Log : public Command {
+    class PrintCommand : public Command
+    {
+        std::string s;
     public:
-        void run() override { ss << "Log"; }
-    };
+        PrintCommand(std::string s) : s(s)
+        {
 
-    class Sum : public Command {
-    public:
-        void run() override { ss << "Sum"; }
+        }
+        void run() override {
+            ss << s;
+        }
     };
 }
 
@@ -79,7 +82,7 @@ public:
         {
             ofs << ",";
         }
-        
+
         ofs << " " << ss.str();
         ofs.close();
     }
@@ -182,8 +185,8 @@ class Parser {
 
 public:
     Parser(int N) : block_size(N) {
-         dynamic_blocks = nullptr;
-	 static_block = std::make_unique<StaticBlock<T>>(N);
+        dynamic_blocks = nullptr;
+        static_block = std::make_unique<StaticBlock<T>>(N);
     }
 
     void parse(const std::string& input) {
@@ -205,12 +208,7 @@ public:
         }
         else {
             std::unique_ptr<Commands::Command> cmd;
-            if (input == "Log") {
-                cmd = std::make_unique<Commands::Log>();
-            }
-            else if (input == "Sum") {
-                cmd = std::make_unique<Commands::Sum>();
-            }
+            cmd = std::make_unique<Commands::PrintCommand>(input);
 
             if (cmd) {
                 if (dynamic_blocks != nullptr) {
@@ -240,8 +238,8 @@ public:
 
 int main(int argc, char** argv) {
 
-
-   if (argc < 2)
+    
+    if (argc < 2)
     {
         std::cout << "Use: " << argv[0] << "with parameter N";
         return 1;
