@@ -30,27 +30,49 @@ namespace Commands {
     };
 }
 
-class ConsoleExecute
+class BasiceExecute
+{
+public:
+    std::stringstream ss;
+    virtual void really_execute() {};
+};
+
+class ConsoleExecute : public BasiceExecute
 {
     bool IsMeWrite = false;
 public:
-    void update() { IsMeWrite = false; };
-    void operator() (std::stringstream& ss)
+    void update() 
+    {
+        ss.clear();//clear any bits set
+        ss.str(std::string());
+        IsMeWrite = false;
+    };
+    void operator() (std::stringstream& ss_)
     {
         if (!IsMeWrite)
         {
-            std::cout << "bulk:";
+            ss << "bulk:";
             IsMeWrite = true;
         }
         else
         {
-            std::cout << ",";
+            ss << ",";
         }
-        std::cout << " " << ss.str();
+        ss << " " << ss_.str();
+    }
+
+    void really_execute() override
+    {
+        std::cout << ss.str();
+    }
+
+    std::string get_my_buf()
+    {
+        return ss.str();
     }
 };
 
-class FileExecute
+class FileExecute : public BasiceExecute
 {
     size_t time;
     std::ofstream ofs;
@@ -59,6 +81,8 @@ class FileExecute
 public:
     void update()
     {
+        ss.clear();//clear any bits set
+        ss.str(std::string());
         if (ofs.is_open())
         {
             ofs.close();
@@ -70,22 +94,31 @@ public:
         name += ".log";
         IsItWrite = false;
     }
-    void operator() (std::stringstream& ss)
+    void operator() (std::stringstream& ss_)
     {
 
-        ofs.open(name, std::ios::app);
         if (!IsItWrite)
         {
-            ofs << "bulk:";
+            ss << "bulk:";
+            IsItWrite = true;
         }
         else
         {
-            ofs << ",";
+            ss << ",";
         }
 
-        ofs << " " << ss.str();
+        ss << " " << ss_.str();
         ofs.close();
     }
+
+    void really_execute() override
+    {
+        ofs.open(name, std::ios::app);
+        ofs << ss.str();
+        ofs.close();
+    }
+
+    
 
     ~FileExecute()
     {
@@ -115,6 +148,17 @@ public:
     {
         ce(ss);
         fe(ss);
+    }
+
+    std::string get_my_buf()
+    {
+        return ce.get_my_buf();
+    }
+
+    void really_execute()
+    {
+        ce.really_execute();
+        fe.really_execute();
     }
 };
 
@@ -152,6 +196,10 @@ public:
 
         commands.clear();
     }
+    std::string get_buf()
+    {
+        return executable.get_my_buf();
+    }
     virtual ~Block() = default;
 };
 template<typename T>
@@ -165,6 +213,7 @@ public:
         Block<T>::add_command(std::move(cmd));
         if (++count >= capacity) {
             Block<T>::execute();
+            Block<T>::executable.really_execute();
             count = 0;
         }
     }
@@ -175,6 +224,17 @@ public:
     DynamicBlock* parent;
     void execute() override {
         Block<T>::execute();
+        if (parent == nullptr)
+        {
+            Block<T>::executable.really_execute();
+        }
+        else
+        {
+            auto l = Block<T>::get_buf();
+            std::unique_ptr<Commands::Command> cmd;
+            cmd = std::make_unique<Commands::PrintCommand>(l);
+            parent->add_command(std::move(cmd));
+        }
     }
 };
 template<typename T>
@@ -238,7 +298,7 @@ public:
 
 int main(int argc, char** argv) {
 
-    
+     
     if (argc < 2)
     {
         std::cout << "Use: " << argv[0] << "with parameter N";
