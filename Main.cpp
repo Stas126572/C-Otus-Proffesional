@@ -32,43 +32,50 @@ namespace Commands {
 
 class BasiceExecute
 {
+protected:
+    bool IsMeWrite = false;
 public:
     std::stringstream ss;
     virtual void really_execute() {};
-};
-
-class ConsoleExecute : public BasiceExecute
-{
-    bool IsMeWrite = false;
-public:
-    void update() 
-    {
-        ss.clear();//clear any bits set
-        ss.str(std::string());
-        IsMeWrite = false;
-    };
     void operator() (std::stringstream& ss_)
     {
-        if (!IsMeWrite)
+        if (IsMeWrite)
         {
-            ss << "bulk:";
-            IsMeWrite = true;
+            ss << ", ";
         }
         else
         {
-            ss << ",";
+            IsMeWrite = true;
         }
-        ss << " " << ss_.str();
-    }
-
-    void really_execute() override
-    {
-        std::cout << ss.str();
+        ss << ss_.str();
     }
 
     std::string get_my_buf()
     {
         return ss.str();
+    }
+
+    void update()
+    {
+        ss.clear();//clear any bits set
+        ss.str(std::string());
+        update_();
+        IsMeWrite = false;
+    }
+
+    virtual void update_()
+    {
+
+    }
+};
+
+class ConsoleExecute : public BasiceExecute
+{
+public:
+    void really_execute() override
+    {
+        std::cout << "bulk: ";
+        std::cout << ss.str();
     }
 };
 
@@ -77,12 +84,10 @@ class FileExecute : public BasiceExecute
     size_t time;
     std::ofstream ofs;
     std::string name;
-    bool IsItWrite;
 public:
-    void update()
+
+    void update_() override
     {
-        ss.clear();//clear any bits set
-        ss.str(std::string());
         if (ofs.is_open())
         {
             ofs.close();
@@ -92,33 +97,15 @@ public:
         name = "bulk";
         name += std::to_string(time);
         name += ".log";
-        IsItWrite = false;
-    }
-    void operator() (std::stringstream& ss_)
-    {
-
-        if (!IsItWrite)
-        {
-            ss << "bulk:";
-            IsItWrite = true;
-        }
-        else
-        {
-            ss << ",";
-        }
-
-        ss << " " << ss_.str();
-        ofs.close();
     }
 
     void really_execute() override
     {
         ofs.open(name, std::ios::app);
+        ofs << "bulk: ";
         ofs << ss.str();
         ofs.close();
     }
-
-    
 
     ~FileExecute()
     {
@@ -298,7 +285,7 @@ public:
 
 int main(int argc, char** argv) {
 
-     
+    
     if (argc < 2)
     {
         std::cout << "Use: " << argv[0] << "with parameter N";
