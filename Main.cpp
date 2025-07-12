@@ -1,256 +1,194 @@
-#include <cassert>
-#include <cstdlib>
+#include <stdio.h>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
+#include <map>
 
-// ("",  '.') -> [""]
-// ("11", '.') -> ["11"]
-// ("..", '.') -> ["", "", ""]
-// ("11.", '.') -> ["11", ""]
-// (".11", '.') -> ["", "11"]
-// ("11.22", '.') -> ["11", "22"]
-
-using st = std::string;
-auto split(const st& str, char d)
+void assert(bool conditional, const char* message)
 {
-    std::vector<st> r;
-
-    st::size_type start = 0;
-    st::size_type stop = str.find_first_of(d);
-    while (stop != st::npos)
-    {
-        r.push_back(str.substr(start, stop - start));
-
-        start = stop + 1;
-        stop = str.find_first_of(d, start);
-    }
-
-    r.push_back(str.substr(start));
-
-    return r;
+	if (!conditional)
+	{
+		std::cout << "Assert error: " << message << std::endl;
+		throw message;
+	};
 }
 
-template<typename T, typename T2>
-std::vector<T2>  filter_with_predicate(std::vector<T2> source, T func)
+void LOG(const char* message)
 {
-    std::vector<T2> vector;
+	std::cout << message << std::endl;
+}
 
-    for (auto ip : source)
-    {
-        if (func(ip) == true)
+template<typename Type, int automatic_val, int demension, int start_demension = demension>
+class Matrix;
+
+
+//TODO : WRITE AN ASSERT: If start_demension < demension.
+template<typename Type, int demension, int start_demension = demension>
+class MatrixBasic
+{
+	friend class Matrix<Type, demension, -1, start_demension>;
+	using StartMatrix                 =  MatrixBasic<Type, start_demension, start_demension>;
+        using MatrixWithEqualDemension    =  MatrixBasic<Type, demension      , start_demension>;
+        using MatrixWithSmallDemension    =  MatrixBasic<Type, demension - 1  , start_demension>;
+        using MatrixWithEqualDemensionRef =  MatrixWithEqualDemension*;
+        using MatrixWithSmallDemensionRef =  MatrixWithSmallDemension*;
+
+	StartMatrix*                                     basic_matrix;
+	Type                                             val;
+	std::map<int, MatrixWithSmallDemensionRef>       mp;
+protected:
+        using StartMatrixRef                              =  StartMatrix*;
+	bool IsItSet = false;
+
+	bool is_it_have(int index)
+	{
+		return (mp.count(index) != 0);
+	}
+
+	Type get_value()
         {
-            vector.push_back(ip);
+                static_assert(demension <= 0,                  "Please don't take val at element, with index bigger 0.");
+                return val;
         }
-    }
+        MatrixWithSmallDemensionRef get_element (int index)
+        {
+                static_assert(demension > 0,                 "Please don't take element for index at matrix with zero dementional. It is an element.");
+                assert       (mp.count(index) != 0,          "There is not element with this index");
+                return mp[index];
+        };
+        MatrixWithEqualDemensionRef set_value(Type tp)
+        {
+                LOG("Val: ");
+		IsItSet = true;
+                val = tp;
+                return this;
+        }
 
-    return vector;
-}
-
-class IP
-{
-    char* mas;
-    int size;
-
+        MatrixWithSmallDemensionRef set_element(int index) 
+        {
+                LOG("Index: ");
+                mp[index] = new MatrixWithSmallDemension(basic_matrix); 
+                return mp[index];
+        }
+	StartMatrixRef get_start_matrix()
+	{
+		return basic_matrix;
+	}
 public:
-
-
-    friend std::ostream& operator<<(std::ostream& os, IP ip);
-
-    IP(std::vector<std::string> vec)
-    {
-        size = vec.size();
-        mas = new  char[vec.size()];
-        for (auto i = 0; i < vec.size(); i++)
-        {
-            const char* s = vec[i].c_str();
-            mas[i] = (atoi(s)-128);
-        }
-    }
-
-    int operator[] (unsigned int s)
-    {
-        return ((int)mas[s]+128);
-    }
-
-    bool operator <(IP& second_ip)
-    {
-        for (int i = 0; i < size; i++)
-        {
-            if (second_ip.mas[i] != mas[i])
-            {
-                return mas[i] < second_ip.mas[i];
-            }
-        }
-        return false;
-    }
-
-    int get_size()
-    {
-        return size;
-    }
+	MatrixBasic ()
+	{
+		static_assert(start_demension == demension, "Please get ref to parent at not max-demensionmatrix.");
+		basic_matrix = this;
+	}
+	MatrixBasic (StartMatrixRef mb)
+	{
+		static_assert(start_demension != demension, "Please don't get ref to max-demensional matrix.");
+		basic_matrix = mb;
+	};
+	bool operator<(MatrixWithEqualDemension mt)
+	{
+		return false;
+	}
 };
 
-std::ostream& operator<<(std::ostream& os, IP ip)
+template<typename Type, int automatic_val, int demension, int start_demension>
+class Matrix : public MatrixBasic<Type, demension, start_demension>
 {
-    for (auto i = 0; i < ip.size; i++)
-    {
-        if (i != 0)
-        {
-            os << '.';
-        }
-        os << std::to_string(((int)ip[i]));
-    }
+	std::array<int, start_demension - demension> ar;
+	template<typename T, int times = 0>
+	void set(Type val, T ret = MatrixBasic<Type, demension, start_demension>::get_start_matrix())
+	{
 
-    return os;
-}
+		if constexpr(times == start_demension)
+		{
+			ret->set_value(val);
+			return;
+		}
+		else
+		{
+			if (ret->is_it_have(ar[times]))
+			{
+				set(val, ret->get_element(ar[times]));
+			}
+			else
+			{
+				set(val, ret->set_element(ar[times]));
+			}
+			return;
+		}
+	}
 
+	template<typename T, int times = 0>
+	Type get(T ret = MatrixBasic<Type, demension, start_demension>::get_start_matrix())
+	{
+
+		if constexpr(times == start_demension)
+		{
+			if (MatrixBasic<Type, demension, start_demension>::IsItSet)
+			{
+				return ret->get_val();
+			}
+			else
+			{
+				return automatic_val;
+			}
+		}
+		else
+		{
+			if (ret->get_element(ar[times]))
+			{
+				return get<MatrixBasic<Type,start_demension - times - 1 ,start_demension>, times + 1>(ret->get_element(ar[times]));
+			}
+			else
+			{
+				return automatic_val;
+			};
+		}
+	}
+public:
+	Matrix()
+	{
+		MatrixBasic<Type, demension, start_demension>();
+	}
+	Matrix(MatrixBasic<Type, start_demension, start_demension>* mb, std::array<int, start_demension - demension - 1> ar_, int index)
+	{
+		for (int i = 0; i < ar_.size(); i++)
+		{
+			ar[i] = ar_[i];
+		}
+		ar[start_demension - demension] = index;
+		MatrixBasic<Type, demension, start_demension>(mb);
+	}
+	Matrix<Type, automatic_val, demension - 1, start_demension>* operator[] (int index)
+	{
+		Matrix<Type, automatic_val, demension - 1, start_demension> mt = new Matrix<Type, automatic_val, demension - 1, start_demension>(get_start_matrix(), ar, index);
+		return mt;
+	};
+	void operator= (Type val)
+	{
+		set(val);
+	}
+
+	operator Type()
+	{
+		return get();
+	}
+};
 
 int main()
 {
-    try
-    {
-        std::vector<IP > ip_pool;
-
-        for (st line; std::getline(std::cin, line);)
-        {
-            auto v = split(line, '\t');
-            ip_pool.push_back(split(v.at(0), '.'));
-        }
-
-        // TODO reverse lexicographically sort
-
-        std::sort(ip_pool.begin(), ip_pool.end());
-
-        for (auto ip : ip_pool)
-        {
-            std::cout << ip << std::endl;
-        }
-
-
-        auto filter = [](auto source, std::string& s )
-        {
-            return filter_with_predicate(source,[s]
-                                         (IP v)
-                                         {
-                                             for (auto i = 0; i < s.size(); i++)
-                                             {
-                                                 if (v[i] != s[i])
-                                                 {
-                                                     return false;
-                                                 }
-                                             }
-                                             return true;
-
-                                         }
-                                         );
-        };
-
-
-        auto filter_any = [](auto source, char s)
-        {
-            return filter_with_predicate(source,
-                                         [s](IP v)
-                                         {
-                                             for (auto i = 0; i < v.get_size(); i++)
-                                             {
-                                                 if (v[i] == s)
-                                                 {
-                                                     return true;
-                                                 }
-                                             }
-                                             return false;
-                                         }
-                                         );
-        };
-
-        std::string str = { 1 };
-
-        for (auto ip : filter(ip_pool, str))
-        {
-            std::cout << ip << std::endl;
-        }
-
-
-        std::string str2 = {46, 70};
-
-        for (auto ip : filter(ip_pool, str2))
-        {
-            std::cout << ip << std::endl;
-        }
-
-        for (auto ip : filter_any(ip_pool, 46))
-        {
-            std::cout << ip << std::endl;
-        }
-        // 222.173.235.246
-        // 222.130.177.64
-        // 222.82.198.61
-        // ...
-        // 1.70.44.170
-        // 1.29.168.152
-        // 1.1.234.8
-
-        // TODO filter by first byte and output
-        // ip = filter(1)
-
-        // 1.231.69.33
-        // 1.87.203.225
-        // 1.70.44.170
-        // 1.29.168.152
-        // 1.1.234.8
-
-        // TODO filter by first and second bytes and output
-        // ip = filter(46, 70)
-
-        // 46.70.225.39
-        // 46.70.147.26
-        // 46.70.113.73
-        // 46.70.29.76
-
-        // TODO filter by any byte and output
-        // ip = filter_any(46)
-
-        // 186.204.34.46
-        // 186.46.222.194
-        // 185.46.87.231
-        // 185.46.86.132
-        // 185.46.86.131
-        // 185.46.86.131
-        // 185.46.86.22
-        // 185.46.85.204
-        // 185.46.85.78
-        // 68.46.218.208
-        // 46.251.197.23
-        // 46.223.254.56
-        // 46.223.254.56
-        // 46.182.19.219
-        // 46.161.63.66
-        // 46.161.61.51
-        // 46.161.60.92
-        // 46.161.60.35
-        // 46.161.58.202
-        // 46.161.56.241
-        // 46.161.56.203
-        // 46.161.56.174
-        // 46.161.56.106
-        // 46.161.56.106
-        // 46.101.163.119
-        // 46.101.127.145
-        // 46.70.225.39
-        // 46.70.147.26
-        // 46.70.113.73
-        // 46.70.29.76
-        // 46.55.46.98
-        // 46.49.43.85
-        // 39.46.86.85
-        // 5.189.203.46
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << std::endl;
-    }
-
-    return 0;
+	try
+	{
+		Matrix<int, -1, 2>* mb = new Matrix<int, -1, 2>();
+		/*
+		MatrixBasic<int, 2>* mb = new MatrixBasic<int, 2>();
+		mb->set_element_(0)->set_element_(0)->set_element(1);
+		std::cout << mb->get_element(0)->get_element(0)->get_value();
+		//MatrixBasic<int, 2>* mb_ = new MatrixBasic<int, 2>(mb);
+		*/
+		return 0;
+	}
+	catch(...)
+	{
+		return 1;
+	}
 }
+
